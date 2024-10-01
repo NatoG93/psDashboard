@@ -22,8 +22,5 @@ else:
     os.chdir(r"C:\Users\sergi\PycharmProjects\psDashboard")
     df = pd.read_csv("data.csv")
 
-# Extract unique month values
-#month_options = df['Month'].unique()
-
 st.sidebar.header("Filtrar datos:")
 month = st.sidebar.multiselect("Seleccionar mes:",df["Month"].unique())
