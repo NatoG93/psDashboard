@@ -20,5 +20,10 @@ if fl is not None:
 
 else:
     os.chdir(r"C:\Users\sergi\PycharmProjects\psDashboard")
-    df = pd.read_csv("data.csv", encoding='ISO-8859-1')
+    df = pd.read_csv("data.csv")
 
+# Extract unique month values
+#month_options = df['Month'].unique()
+
+st.sidebar.header("Filtrar datos:")
+month = st.sidebar.multiselect("Seleccionar mes:",df["Month"].unique())
