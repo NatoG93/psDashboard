@@ -14,16 +14,21 @@ st.title(" :bar_chart: ProShippiers Month Over Month Dashboard",anchor='title')
 logo_link = 'https://proshippiersweb.blob.core.windows.net/logos/ProSW.png'
 st.logo(logo_link)
 
+# Block for uploading data
+load_block = st.empty()
+load_container = load_block.container()
+
 # Load data
-fl = st.file_uploader(":file_folder: Upload CSV file", type=['csv',"xls","xlsx"])
+fl = load_container.file_uploader(":file_folder: Upload CSV file", type=['csv',"xls","xlsx"])
 if fl is not None:
     filename = fl.name
-    st.write(filename)
     df = pd.read_csv(filename)
+    load_block.empty()
 else:
     os.chdir(r"C:\Users\sergi\PycharmProjects\psDashboard")
     df = pd.read_csv("data.csv")
 
+# Create sidebar menu
 st.sidebar.header("Filtrar datos:")
 month = st.sidebar.multiselect("Seleccionar mes:", options=df["Month"].unique(), default=df["Month"].unique())
 broker = st.sidebar.multiselect("Seleccionar broker:", options=df["Broker"].unique(), default=df["Broker"].unique())
@@ -31,17 +36,39 @@ broker = st.sidebar.multiselect("Seleccionar broker:", options=df["Broker"].uniq
 # Filter dataframe
 filtered_df = df[(df["Month"].isin(month)) & (df["Broker"].isin(broker))]
 
-# Line chart: Fee trend by month
-monthly_fee = filtered_df.groupby("Month")[" Broker Fee "].sum().reset_index()
-fig2 = px.line(monthly_fee, x="Month", y=" Broker Fee ", title="Tendencia de Comisiones por Mes")
-st.plotly_chart(fig2)
+col1, col2, col3, col4 = st.columns((1,1,1,1))
 
-# Display total broker fee
-total_fee = filtered_df[" Broker Fee "].sum()
-st.metric("Comisión Total", f"${total_fee:,.2f}")
+# Current month
+col1.metric(
+    label="September",
+    value = "10",
+    delta = "2"
+)
 
-st.metric(
+
+# Previous Month
+col2.metric(
+    label="August",
+    value = "10",
+    delta = "2"
+)
+
+# MoM %
+col3.metric(
     label="MoM %",
     value = "10",
     delta = "2"
 )
+
+# Display current month broker fee
+total_fee = filtered_df[" Broker Fee "].sum()
+col4.metric("Total", f"${total_fee:,.2f}")
+
+
+# Line chart: Fee trend by month
+monthly_fee = filtered_df.groupby("Month")[" Broker Fee "].sum().reset_index()
+fig2 = px.line(monthly_fee, x="Month", y=" Broker Fee ", title="Sales by Month", markers=True, color_discrete_sequence=['rgb(204,102,119)'])
+st.plotly_chart(fig2)
+
+
+
