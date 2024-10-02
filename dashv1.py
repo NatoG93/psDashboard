@@ -8,7 +8,7 @@ warnings.filterwarnings('ignore')
 
 
 st.set_page_config(page_title="PS Dash",page_icon=":bar_chart:",layout='wide')
-st.title(" :bar_chart: ProShippiers Month Over Month Dashboard",anchor='title')
+st.title(" :chart_with_upwards_trend: ProShippiers Month Over Month Dashboard",anchor='title')
 # st.markdown('<style>div.block-container{padding-top:1rem;}</style>',unsafe_allow_html=True) # Remove the space from top to content
 
 logo_link = 'https://proshippiersweb.blob.core.windows.net/logos/ProSW.png'
@@ -41,7 +41,7 @@ col1, col2, col3, col4 = st.columns((1,1,1,1))
 # Current month
 col1.metric(
     label="September",
-    value = "10",
+    value = f"${10:,.2f}",
     delta = "2"
 )
 
@@ -49,20 +49,23 @@ col1.metric(
 # Previous Month
 col2.metric(
     label="August",
-    value = "10",
+    value = f"${10:,.2f}",
     delta = "2"
 )
 
 # MoM %
 col3.metric(
     label="MoM %",
-    value = "10",
-    delta = "2"
+    value = "10%",
+    delta = "-2"
 )
 
 # Display current month broker fee
 total_fee = filtered_df[" Broker Fee "].sum()
-col4.metric("Total", f"${total_fee:,.2f}")
+col4.metric(
+    label="Total",
+    value= f"${total_fee:,.2f}"
+)
 
 
 # Line chart: Fee trend by month
