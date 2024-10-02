@@ -39,6 +39,7 @@ filtered_df = df[(df["Month"].isin(month)) & (df["Broker"].isin(broker))]
 col1, col2, col3, col4 = st.columns((1,1,1,1))
 
 # Current month
+col1.html('<span class="column1"></span>')
 col1.metric(
     label="September",
     value = f"${10:,.2f}",
@@ -47,6 +48,7 @@ col1.metric(
 
 
 # Previous Month
+col1.html('<span class="column2"></span>')
 col2.metric(
     label="August",
     value = f"${10:,.2f}",
@@ -54,6 +56,7 @@ col2.metric(
 )
 
 # MoM %
+col1.html('<span class="colum3"></span>')
 col3.metric(
     label="MoM %",
     value = "10%",
@@ -61,6 +64,7 @@ col3.metric(
 )
 
 # Display current month broker fee
+col1.html('<span class="column4"></span>')
 total_fee = filtered_df[" Broker Fee "].sum()
 col4.metric(
     label="Total",
@@ -72,6 +76,3 @@ col4.metric(
 monthly_fee = filtered_df.groupby("Month")[" Broker Fee "].sum().reset_index()
 fig2 = px.line(monthly_fee, x="Month", y=" Broker Fee ", title="Sales by Month", markers=True, color_discrete_sequence=['rgb(204,102,119)'])
 st.plotly_chart(fig2)
-
-
-
