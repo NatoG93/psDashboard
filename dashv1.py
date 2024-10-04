@@ -36,28 +36,7 @@ else:
     df = pd.read_csv("datav2.csv")
 
 
-def get_latest_data(df_1):
-    # Ensure 'Year' and 'Month' columns are numeric
-    df_1['Year'] = pd.to_numeric(df_1['Year'])
-    df_1['MonthNum'] = df['Month'].map(month_to_num)
-
-    # Get the max year
-    max_year = df_1['Year'].max()
-
-    # Filter for the max year
-    df_latest_year = df_1[df_1['Year'] == max_year]
-
-    # Get the max month for the latest year
-    max_month = df_latest_year['Month'].max()
-
-    # Filter for the max month in the latest year
-    df_latest = df_latest_year[df_latest_year['Month'] == max_month].iloc[:1, :2]
-
-    return df_latest
-
-latest_data = get_latest_data(df)
-
-
+# Sort months --------------------------------------------------
 def order_data_by_year_and_month(df):
     # Add a month number column for sorting
     df['MonthNum'] = df['Month'].map(month_to_num)
@@ -73,48 +52,30 @@ def order_data_by_year_and_month(df):
 unique_months = df["Month"].unique()
 sorted_months = sorted(unique_months, key=lambda x: month_to_num[x])
 
+# Setting current and previous month based on the Indx column
+current_month = df[df['Indx'] == df['Indx'].max()].iloc[:1,:2]
+
 
 # Create sidebar menu
 st.sidebar.header("Filtrar datos:")
-year = st.sidebar.multiselect("Seleccionar año:", options=df["Year"].unique(), default=latest_data["Year"].iloc[0])
-month = st.sidebar.multiselect("Seleccionar mes:", options=sorted_months, default=latest_data["Month"].iloc[0])
+#year = st.sidebar.selectbox("Seleccionar año:", options=df["Year"].unique(), default=current_month["Year"].iloc[0])
+year = st.sidebar.selectbox("Seleccionar año:", options=df["Year"].unique())
+month = st.sidebar.multiselect("Seleccionar mes:", options=sorted_months, default=current_month["Month"].iloc[0])
 broker = st.sidebar.multiselect("Seleccionar broker:", options=df["Broker"].unique(), default=df["Broker"].unique())
 
-# Filter dataframe
-filtered_df = df[(df["Month"].isin(month)) & (df["Broker"].isin(broker)) & (df["Year"].isin(year))]
+filtered_df = df[(df["Month"].isin(month)) & (df["Broker"].isin(broker)) & (df["Year"] == year)]
+
+previous_month_df = df[df['Indx'] == filtered_df['Indx'].max()-1]
+previous_month = previous_month_df.iloc[:1,:2]
+
+pfiltered_df = previous_month_df[(df["Broker"].isin(broker))]
+
 ordered_df = order_data_by_year_and_month(filtered_df)
-print(ordered_df)
-# Row 1 ---------------------------------------------------------------------------------------
-r1col1, r1col2, r1col3 = st.columns((1,1,1))
-r2col1, r2col2, r2col3 = st.columns((1,1,1))
 
-# Current month
-r1col1.html('<span class="column1"></span>')
-r1col1.metric(
-    label="September",
-    value = f"${10:,.2f}",
-    delta = "2"
-)
-
-
-# Previous Month
-r1col2.html('<span class="column2"></span>')
-r1col2.metric(
-    label="August",
-    value = f"${10:,.2f}",
-)
-
-# MoM %
-r1col3.html('<span class="colum3"></span>')
-r1col3.metric(
-    label="MoM %",
-    value = "10%",
-    delta = "-2"
-)
-
-
-# Line chart: Fee trend by month
-monthly_fee = ordered_df.groupby("Month")["Broker Fee"].sum().reset_index()
+# Line chart: Fee trend by month -----------------------------------------------------------------
+plot_df = order_data_by_year_and_month(df[(df["Broker"].isin(broker)) & (df["Year"] == year)])
+print(plot_df)
+monthly_fee = plot_df.groupby("Month")["Broker Fee"].sum().reset_index()
 # Sort the result based on the predefined month order
 monthly_fee['Month'] = pd.Categorical(monthly_fee['Month'], categories=month_to_num, ordered=True)
 monthly_fee = monthly_fee.sort_values('Month')
@@ -122,28 +83,42 @@ monthly_fee = monthly_fee.sort_values('Month')
 fig2 = px.line(monthly_fee, x="Month", y="Broker Fee", title="Sales by Month", markers=True, color_discrete_sequence=['rgb(204,102,119)'])
 st.plotly_chart(fig2)
 
+col1, col2, col3, col4 = st.columns((1,1,1,1))
 
 # Row 2 -------------------------------------------------------------------------------------
-# Display current month loss
-r2col2.html('<span class="column4"></span>')
 total_loss = filtered_df["Loss"].sum()*-1
-r2col2.metric(
+total_fee = filtered_df["Broker Fee"].sum()
+gross_fee = total_fee + total_loss
+previous_gross = pfiltered_df["Broker Fee"].sum() - pfiltered_df["Loss"].sum()
+
+mom = gross_fee / previous_gross - 1
+
+mom_perc = mom*100 if len(month) <2 else 0
+
+# Display current month loss
+col3.html('<span class="column4"></span>')
+col3.metric(
     label="Loss",
     value= f"${total_loss:,.2f}"
 )
 
 # Display current month broker fee
-r2col1.html('<span class="column4"></span>')
-total_fee = filtered_df["Broker Fee"].sum()
-r2col1.metric(
+col2.html('<span class="column4"></span>')
+col2.metric(
     label="Net",
     value= f"${total_fee:,.2f}"
 )
 
 # Display current month broker fee
-r2col3.html('<span class="column4"></span>')
-gross_fee = total_fee + total_loss
-r2col3.metric(
+col4.html('<span class="column4"></span>')
+col4.metric(
     label="Gross",
-    value= f"${gross_fee:,.2f}"
+    value= f"${gross_fee:,.2f}",
+    delta = f"{mom_perc:,.2f}%",
+)
+# Previous Month
+col1.html('<span class="column2"></span>')
+col1.metric(
+    label="Previous Month",
+    value= f"${previous_gross:,.2f}"
 )
