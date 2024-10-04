@@ -102,7 +102,6 @@ r1col2.html('<span class="column2"></span>')
 r1col2.metric(
     label="August",
     value = f"${10:,.2f}",
-    delta = "2"
 )
 
 # MoM %
@@ -127,9 +126,9 @@ st.plotly_chart(fig2)
 # Row 2 -------------------------------------------------------------------------------------
 # Display current month loss
 r2col2.html('<span class="column4"></span>')
-total_loss = filtered_df["Loss"].sum()
+total_loss = filtered_df["Loss"].sum()*-1
 r2col2.metric(
-    label="Total",
+    label="Loss",
     value= f"${total_loss:,.2f}"
 )
 
@@ -143,7 +142,7 @@ r2col1.metric(
 
 # Display current month broker fee
 r2col3.html('<span class="column4"></span>')
-gross_fee = total_fee - total_loss
+gross_fee = total_fee + total_loss
 r2col3.metric(
     label="Gross",
     value= f"${gross_fee:,.2f}"
